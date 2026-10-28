@@ -1,0 +1,8 @@
+{
+  "name": "desmos-plane-sim",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "playwright": "1.49.1"
+  }
+}
