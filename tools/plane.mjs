@@ -1,4 +1,4 @@
-import { load, save, editor, num, arr, inline, autofold } from "./lib.mjs";
+import { load, save, editor, num, arr, inline, autofold, mergePolygonRuns } from "./lib.mjs";
 
 const [src, out] = process.argv.slice(2);
 const s = load(src);
@@ -28,7 +28,7 @@ E.after("e100",
   E.v("mt8", "M_{r}=1.02r_x"),
   E.v("mt9", "M_{w}=\\frac{-C_y}{M_{r}}"),
   E.v("mt4", `M_{h}(t,i)=M_{w}+\\frac{\\left\\{i=1:${ridge("170", [[110, 3, 1], [70, 7, 2.1], [40, 13, 0.4], [20, 29, 1.7]])},${ridge("90", [[70, 5, 2.6], [42, 11, 0.3], [26, 19, 4.1], [13, 41, 2.2]])}\\right\\}}{M_{r}}`),
-  E.p("mt6", "\\operatorname{polygon}\\left(\\left(\\operatorname{join}\\left(X_k\\left(M_{h}\\left(M_{t},i\\right),M_{t}-a_h\\right),X_k\\left(M_{w}-0.01,B_{u}\\right)\\right),\\operatorname{join}\\left(Y_k\\left(M_{h}\\left(M_{t},i\\right),M_{t}-a_h\\right),Y_k\\left(M_{w}-0.01,B_{u}\\right)\\right)\\right)\\right)\\operatorname{for}i=\\left[1,2\\right]", "#a2bad3", { colorLatex: "\\operatorname{rgb}\\left(\\left[162,150\\right],\\left[186,176\\right],\\left[211,196\\right]\\right)" }),
+  E.p("mt6", "\\operatorname{polygon}\\left(\\left(\\operatorname{join}\\left(X_k\\left(M_{h}\\left(M_{t},i\\right),M_{t}-a_h\\right),X_k\\left(M_{w}-0.01+0B_{u},B_{u}\\right)\\right),\\operatorname{join}\\left(Y_k\\left(M_{h}\\left(M_{t},i\\right),M_{t}-a_h\\right),Y_k\\left(M_{w}-0.01+0B_{u},B_{u}\\right)\\right)\\right)\\right)\\operatorname{for}i=\\left[1,2\\right]", "#a2bad3", { colorLatex: "\\operatorname{rgb}\\left(\\left[162,150\\right],\\left[186,176\\right],\\left[211,196\\right]\\right)" }),
 );
 
 E.drop("e142", "e143", "e144", "e147", "e148", "e149", "e152", "e153", "e154", "e157", "e158", "e159", "e160", "e161", "e162");
@@ -102,6 +102,7 @@ E.after("e179",
   E.p("rw6", `\\operatorname{polygon}\\left(${pt("R_{x0}", "l_{rw}")},${pt("R_{x1}", "m_{rw}")},${pt("R_{x1}", "k_{rw}")},${pt("R_{x0}", "h_{rw}")}\\right)`, "#3a3c42", { colorLatex: "\\operatorname{rgb}\\left(R_{R},R_{G},R_{B}\\right)" }),
 );
 
+{
 const val = (name) => +E.list.find((e) => e.latex && e.latex.startsWith(name + "=")).latex.slice(name.length + 1);
 const [X0, Z0, H0] = [val("X_{p}"), val("Z_{p}"), val("a_{h}")];
 E.set("e283", `J_{i0}=${Math.floor((X0 + 400 * Math.sin(H0)) / 90)}`);
@@ -123,6 +124,48 @@ E.set("e295", "J_{k}=J_{ck}\\left\\{J_{w}>0.02:1,0\\right\\}\\left\\{\\left(J_{x
 E.set("e299", "J_{g}=J_{gh}\\left[J_{I}\\right]");
 E.before("e376", E.v("cy1", "Y_{ck}=\\left\\{Y_{h1}<Y_{f}\\left(Y_{x},Y_{z}\\right):1,0\\right\\}"));
 E.set("e376", E.get("e376").latex.replace("Y_{kk}=\\left\\{Y_{h1}<Y_{f}\\left(Y_{x},Y_{z}\\right):1,0\\right\\}", "Y_{kk}=Y_{ck}"));
+}
+
+{
+  const v = (name) => +E.list.find((e) => e.latex && e.latex.startsWith(name + "=")).latex.slice(name.length + 1);
+  const [ah, ap, ar, yp] = [v("a_{h}"), v("a_{p}"), v("a_{r}"), v("Y_{p}")];
+  const [sh, ch, sp, cp, sr, cr] = [Math.sin(ah), Math.cos(ah), Math.sin(ap), Math.cos(ap), Math.sin(ar), Math.cos(ar)];
+  const az = Math.max(yp - 12, 0), rn = Math.max(6, 0.6 * Math.min(az, 900)), rx = 6000 + 3 * Math.min(az, 3000);
+  const trig = { s_h: "\\sin\\left(a_h\\right)", c_h: "\\cos\\left(a_h\\right)", s_p: "\\sin\\left(a_p\\right)", c_p: "\\cos\\left(a_p\\right)", s_r: "\\sin\\left(a_r\\right)", c_r: "\\cos\\left(a_r\\right)" };
+  const expand = (latex) => latex.replace(/[sc]_[hpr]/g, (m) => trig[m]);
+  const live = [
+    ["e38", sh], ["e39", ch], ["e40", sp], ["e41", cp], ["e42", sr], ["e43", cr],
+    ["e47", sh * cp], ["e48", sp], ["e49", ch * cp],
+    ["e50", ch * cr + sh * sp * sr], ["e51", -cp * sr], ["e52", -sh * cr + ch * sp * sr],
+    ["e53", -sh * sp * cr + ch * sr], ["e54", cp * cr], ["e55", -ch * sp * cr - sh * sr],
+    ["e64", 12], ["e113", Math.pow(rx / rn, 1 / 32)], ["e600", Math.acos(Math.max(-1, Math.min(1, 0.27869 * ap / 0.17)))],
+  ];
+  E.after("e33", E.v("rd1", "R_{d}(x)=\\frac{\\operatorname{round}\\left(10^{6}x\\right)}{10^{6}}"));
+  const acts = [];
+  for (const [id, init] of live) {
+    const e = E.get(id);
+    const k = e.latex.indexOf("=");
+    acts.push(`${e.latex.slice(0, k)}\\to R_{d}\\left(${expand(e.latex.slice(k + 1))}\\right)`);
+    e.latex = `${e.latex.slice(0, k)}=${+init.toFixed(6)}`;
+  }
+  const tk = s.expressions.ticker;
+  for (const name of ["X_p", "Y_p", "Z_p", "a_h", "a_p", "a_r"]) {
+    const head = `\\left\\{m_g=1:${name}\\to `;
+    const i = tk.handlerLatex.indexOf(head);
+    if (i < 0) throw new Error("no ticker action for " + name);
+    let depth = 0, j = i;
+    for (; j < tk.handlerLatex.length; j++) {
+      if (tk.handlerLatex.startsWith("\\left", j)) depth++;
+      if (tk.handlerLatex.startsWith("\\right", j)) { depth--; if (depth === 0) break; }
+    }
+    const rhs = tk.handlerLatex.slice(i + head.length, j);
+    tk.handlerLatex = tk.handlerLatex.slice(0, i) + head + `R_{d}\\left(${rhs}\\right)` + tk.handlerLatex.slice(j);
+  }
+  tk.handlerLatex += "," + acts.join(",");
+  E.set("e281", "J_{cx}=X_p+400s_h");
+  E.set("e282", "J_{cz}=Z_p+400c_h");
+  E.set("e601", "m_a=a_r-1.5707963");
+}
 
 const folds = ["S_{x1}", "S_{y1}", "S_{x2}", "S_{y2}", "S_{x3}", "S_{y3}", "S_{x4}", "S_{y4}", "R_q", "G_q", "B_q", "n_l", "k_{q}", "Y_v",
   "O_{u1}", "O_{v1}", "O_{u2}", "O_{v2}", "O_{u3}", "O_{v3}", "O_{u4}", "O_{v4}", "O_{u5}", "O_{v5}",
@@ -131,5 +174,7 @@ const folds = ["S_{x1}", "S_{y1}", "S_{x2}", "S_{y2}", "S_{x3}", "S_{y3}", "S_{x
 for (const f of folds) inline(s, f);
 console.log("autofold", autofold(s, ["m_g", "r_e", "t_d", "u_x", "u_y", "y_t", "v_d", "h_f"]));
 
+const panels = s.expressions.list.filter((e) => e.type === "folder" && /Cockpit|Screens/.test(e.title || "")).map((e) => e.id);
+console.log("merged", mergePolygonRuns(s, panels), "static and", mergePolygonRuns(s, panels, { clickable: true }), "button polygons");
 save(out, s);
 console.log("rects", rects.length, "exprs", s.expressions.list.length);

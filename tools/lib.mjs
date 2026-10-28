@@ -95,3 +95,44 @@ export function autofold(state, quiet = [], skip = []) {
   }
   return total;
 }
+
+const POLY = "\\operatorname{polygon}";
+export function numericPolygon(latex) {
+  if (!latex || !latex.startsWith(POLY)) return null;
+  const body = latex.slice(POLY.length).replaceAll("\\left", "").replaceAll("\\right", "").replace(/\s/g, "");
+  if (!/^\(\(.*\)\)$/.test(body) || /[^0-9.,()\-]/.test(body)) return null;
+  const pts = [...body.slice(1, -1).matchAll(/\((-?[0-9.]+),(-?[0-9.]+)\)/g)].map((m) => [+m[1], +m[2]]);
+  return pts.length >= 3 ? pts : null;
+}
+
+const hex = (c) => [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16));
+const lit = (a) => `\\left[${a.map((v) => String(+(+v).toFixed(4))).join(",")}\\right]`;
+
+export function mergePolygonRuns(state, inFolders, { clickable = false } = {}) {
+  const list = state.expressions.list;
+  const style = (e) => [e.fill, e.lines, e.fillOpacity, e.lineWidth, e.lineOpacity, e.colorLatex ? "cl" : "", e.clickableInfo?.enabled ? e.clickableInfo.latex : ""].join("|");
+  const eligible = (e) => e.type === "expression" && !e.hidden && inFolders.includes(e.folderId) && !e.colorLatex && /^#[0-9a-fA-F]{6}$/.test(e.color || "") && !!e.clickableInfo?.enabled === clickable && numericPolygon(e.latex);
+  let merged = 0, i = 0;
+  while (i < list.length) {
+    if (!eligible(list[i])) { i++; continue; }
+    let j = i + 1;
+    while (j < list.length && eligible(list[j]) && style(list[j]) === style(list[i]) && list[j].folderId === list[i].folderId) j++;
+    if (j - i >= 2) {
+      const run = list.slice(i, j);
+      const X = [], Y = [], S = [], Ee = [], R = [], G = [], B = [];
+      for (const e of run) {
+        const pts = numericPolygon(e.latex);
+        S.push(X.length + 1);
+        for (const [x, y] of pts) { X.push(x); Y.push(y); }
+        Ee.push(X.length);
+        const [r, g, b] = hex(e.color); R.push(r); G.push(g); B.push(b);
+      }
+      const first = run[0];
+      const e = { ...first, id: first.id + "m", latex: `${POLY}\\left(${lit(X)}\\left[${lit(S)}\\left[i\\right]...${lit(Ee)}\\left[i\\right]\\right],${lit(Y)}\\left[${lit(S)}\\left[i\\right]...${lit(Ee)}\\left[i\\right]\\right]\\right)\\operatorname{for}i=\\left[1...${run.length}\\right]`, colorLatex: `\\operatorname{rgb}\\left(${lit(R)},${lit(G)},${lit(B)}\\right)` };
+      list.splice(i, j - i, e);
+      merged += run.length - 1;
+    }
+    i++;
+  }
+  return merged;
+}

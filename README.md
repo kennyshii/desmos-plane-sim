@@ -57,8 +57,14 @@ Plane Sim is a first-person flight simulator that runs entirely inside the [Desm
 Desmos recomputes every expression that depends on something that changed, and each of those expressions has a fixed cost on top of its math. Most of the speed work is about keeping that count down:
 
 - Helper expressions that are only used once are folded into the expression that uses them.
-- The runway, the sky and the mountains are each a single list expression instead of one expression per piece.
+- The runway, the sky and the mountains are each a single list expression instead of one expression per piece, and the cockpit's 125 fixed shapes are drawn by a handful of list expressions.
 - Values that change only when the plane crosses a grid cell are written by the ticker only when they actually change.
+
+## Fixing the freezes
+
+The graph used to slow down and then freeze for several seconds at a time after a minute or two of flying, especially while turning with the arrow buttons. The cause was inside Desmos: it turns list math into JavaScript functions, and when a number used in that math is a long decimal (like the sine of the heading), it writes that number straight into the function's code. Since the heading, position and camera angles change on every tick, Desmos was generating thousands of brand-new functions per second, its background worker's memory grew past a gigabyte, and the freezes were the browser cleaning that up.
+
+The fix keeps every per-tick number short. The ticker rounds the plane's position and angles to six decimal places, computes the camera's sines, cosines and direction vectors itself (also rounded), and the graph avoids feeding values like π or square roots of moving numbers into list math. Desmos treats short decimals as exact values it can pass in instead of rewriting code, so the same compiled functions are reused every tick and memory stays flat. Rounding to a micrometer and a microradian is invisible on screen.
 
 ## Repository layout
 
@@ -69,7 +75,7 @@ graph/
 tools/
   plane.mjs           builds plane-sim.json from plane-sim-v1.json: sky gradient, mountains,
                       smooth terrain lighting, haze, runway markings, per-cell scenery caching,
-                      expression folding
+                      expression folding, merged cockpit shapes, rounded ticker values
   lib.mjs             helpers for editing graph states and folding single-use expressions
   check.mjs           loads graph states in Chrome and lists any expression errors
   bench.mjs           measures ticks per second for several graph states, interleaved
