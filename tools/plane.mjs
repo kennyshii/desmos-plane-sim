@@ -1,4 +1,5 @@
 import { load, save, editor, num, arr, inline, autofold, mergePolygonRuns } from "./lib.mjs";
+import { addChase } from "./chase.mjs";
 
 const [src, out] = process.argv.slice(2);
 const s = load(src);
@@ -202,5 +203,6 @@ E.before("e746",
   knob("sk10", "\\left(k_x,k_y\\right)", "24"),
   knob("sk11", "\\left(-1.72,y_t\\right)", "22"),
 );
+console.log("chase faces", addChase(s, E));
 save(out, s);
 console.log("rects", rects.length, "exprs", s.expressions.list.length);
