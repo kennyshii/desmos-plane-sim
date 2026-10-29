@@ -50,6 +50,8 @@ Plane Sim is a first-person flight simulator that runs entirely inside the [Desm
 
 **Trees and clouds.** Their positions come from a hash of their grid cell. The cell index is only updated by the ticker when the plane crosses into a new cell, so the hashing and the terrain height under each tree are not recomputed on every tick.
 
+**Draggable controls.** Desmos will not let you drag a point that has a condition attached, so the stick knob and the throttle handle are plain points that fade out through an opacity expression when you are not flying. A solid copy sits underneath each one so they keep the same look as the rest of the cockpit, and a shaft drawn from the center of the stick pad to the knob shows which way the stick is pushed.
+
 **Flight model.** Speed comes from thrust (weaker at altitude), drag and gravity along the pitch angle. The plane sinks below its stall speed, flaps lower that stall speed, and banking turns the plane at the rate a real coordinated turn would (9.81·tan(bank)/speed). On the ground the plane rolls on the runway; touching down checks the sink rate, bank, pitch, speed and whether you are over the runway, land or water.
 
 ## Keeping it fast

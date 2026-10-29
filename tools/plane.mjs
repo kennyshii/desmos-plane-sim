@@ -176,5 +176,15 @@ console.log("autofold", autofold(s, ["m_g", "r_e", "t_d", "u_x", "u_y", "y_t", "
 
 const panels = s.expressions.list.filter((e) => e.type === "folder" && /Cockpit|Screens/.test(e.title || "")).map((e) => e.id);
 console.log("merged", mergePolygonRuns(s, panels), "static and", mergePolygonRuns(s, panels, { clickable: true }), "button polygons");
+
+const flying = "\\left\\{\\left|m_g-3\\right|=2:1,0\\right\\}";
+E.set("e746", "\\left(u_x,u_y\\right)", { pointOpacity: flying });
+E.set("e747", "\\left(-1.72,y_t\\right)", { pointOpacity: flying });
+const knob = (id, latex, size) => ({ ...E.v(id, `${latex}\\left\\{\\left|m_g-3\\right|=2\\right\\}`), hidden: false, color: "#ff9f0a", pointSize: size });
+E.before("e746",
+  { ...E.v("sk9", "\\operatorname{polygon}\\left(\\left(1.62,-0.62\\right),\\left(u_x,u_y\\right)\\right)"), hidden: false, color: "#8b909c", lines: true, fill: false, lineWidth: "10", lineOpacity: flying },
+  knob("sk10", "\\left(u_x,u_y\\right)", "24"),
+  knob("sk11", "\\left(-1.72,y_t\\right)", "22"),
+);
 save(out, s);
 console.log("rects", rects.length, "exprs", s.expressions.list.length);
