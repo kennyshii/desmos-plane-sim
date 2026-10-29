@@ -180,6 +180,7 @@ console.log("merged", mergePolygonRuns(s, panels), "static and", mergePolygonRun
 const flying = "\\left\\{\\left|m_g-3\\right|=2:1,0\\right\\}";
 E.set("e746", "\\left(u_x,u_y\\right)", { pointOpacity: "\\left\\{\\left|m_g-3\\right|=2:\\left\\{\\left|u_x-k_x\\right|+\\left|u_y-k_y\\right|>0.004:1,0\\right\\},0\\right\\}", pointStyle: "OPEN", pointSize: "26", color: "#ffd27a" });
 E.set("e747", "\\left(-1.72,y_t\\right)", { pointOpacity: flying });
+for (const [id, min, max] of [["e26", "1.41", "1.83"], ["e27", "-0.83", "-0.41"], ["e28", "-0.9", "-0.44"]]) s.expressions.list.find((e) => e.id === id).slider = { hardMin: true, hardMax: true, min, max, step: "0.001" };
 const stickSpeed = 0.0003;
 E.after("e27",
   E.v("sk12", "k_{x}=1.62"),
