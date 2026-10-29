@@ -15,7 +15,7 @@ Plane Sim is a first-person flight simulator that runs entirely inside the [Desm
 | Control | What it does |
 |---|---|
 | Throttle | Drag the amber lever (bottom left) up for power, or use MAX, +, − and IDLE |
-| Stick | Drag the knob in the bottom-right square: sideways to bank and turn, down to pull the nose up, up to push it down. The arrow buttons nudge it |
+| Stick | Drag the knob in the bottom-right square: sideways to bank and turn, down to pull the nose up, up to push it down. The knob has some resistance: a ring marks where you are pulling and the stick slides there in under a second. The arrow buttons nudge it |
 | FLAPS | Extra lift at low speed, for take-off and landing |
 | STICK: REAL / INVERTED | Flips the stick's up and down |
 | CENTER STICK | Levels everything out |
@@ -50,7 +50,7 @@ Plane Sim is a first-person flight simulator that runs entirely inside the [Desm
 
 **Trees and clouds.** Their positions come from a hash of their grid cell. The cell index is only updated by the ticker when the plane crosses into a new cell, so the hashing and the terrain height under each tree are not recomputed on every tick.
 
-**Draggable controls.** Desmos will not let you drag a point that has a condition attached, so the stick knob and the throttle handle are plain points that fade out through an opacity expression when you are not flying. A solid copy sits underneath each one so they keep the same look as the rest of the cockpit, and a shaft drawn from the center of the stick pad to the knob shows which way the stick is pushed.
+**Draggable controls.** Desmos will not let you drag a point that has a condition attached, so the stick knob and the throttle handle are plain points that fade out through an opacity expression when you are not flying. A solid copy sits underneath each one so they keep the same look as the rest of the cockpit, and a shaft drawn from the center of the stick pad to the knob shows which way the stick is pushed. The point you drag is only a target: on every tick the ticker moves the real stick toward it at a fixed speed (a full deflection takes about 0.7 seconds), so a quick flick of the mouse turns into a smooth input instead of a sudden jerk.
 
 **Flight model.** Speed comes from thrust (weaker at altitude), drag and gravity along the pitch angle. The plane sinks below its stall speed, flaps lower that stall speed, and banking turns the plane at the rate a real coordinated turn would (9.81·tan(bank)/speed). On the ground the plane rolls on the runway; touching down checks the sink rate, bank, pitch, speed and whether you are over the runway, land or water.
 

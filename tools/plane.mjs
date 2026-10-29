@@ -178,12 +178,27 @@ const panels = s.expressions.list.filter((e) => e.type === "folder" && /Cockpit|
 console.log("merged", mergePolygonRuns(s, panels), "static and", mergePolygonRuns(s, panels, { clickable: true }), "button polygons");
 
 const flying = "\\left\\{\\left|m_g-3\\right|=2:1,0\\right\\}";
-E.set("e746", "\\left(u_x,u_y\\right)", { pointOpacity: flying });
+E.set("e746", "\\left(u_x,u_y\\right)", { pointOpacity: "\\left\\{\\left|m_g-3\\right|=2:\\left\\{\\left|u_x-k_x\\right|+\\left|u_y-k_y\\right|>0.004:1,0\\right\\},0\\right\\}", pointStyle: "OPEN", pointSize: "26", color: "#ffd27a" });
 E.set("e747", "\\left(-1.72,y_t\\right)", { pointOpacity: flying });
+const stickSpeed = 0.0003;
+E.after("e27",
+  E.v("sk12", "k_{x}=1.62"),
+  E.v("sk13", "k_{y}=-0.62"),
+  E.v("sk14", `K_{f}\\left(t\\right)=M_n\\left(1,\\frac{${stickSpeed}M_n\\left(t,50\\right)}{\\sqrt{\\left(u_x-k_x\\right)^{2}+\\left(u_y-k_y\\right)^{2}}}\\right)`),
+);
+E.set("e35", "s_x=C_l\\left(\\frac{k_x-1.62}{0.21},-1,1\\right)");
+E.set("e36", "s_y=C_l\\left(\\frac{k_y+0.62}{0.21},-1,1\\right)");
+const lagging = "\\left|u_x-k_x\\right|+\\left|u_y-k_y\\right|>0";
+s.expressions.ticker.handlerLatex += ["x", "y"].map((a) => `,\\left\\{${lagging}:k_${a}\\to R_{d}\\left(k_${a}+\\left(u_${a}-k_${a}\\right)K_{f}\\left(\\operatorname{dt}\\right)\\right)\\right\\}`).join("");
+for (const e of s.expressions.list) {
+  const c = e.clickableInfo;
+  if (c && c.latex.includes("m_g\\to1") && c.latex.includes("u_x\\to1.62,u_y\\to-0.62")) c.latex = c.latex.replace("u_x\\to1.62,u_y\\to-0.62", "u_x\\to1.62,u_y\\to-0.62,k_x\\to1.62,k_y\\to-0.62");
+}
+
 const knob = (id, latex, size) => ({ ...E.v(id, `${latex}\\left\\{\\left|m_g-3\\right|=2\\right\\}`), hidden: false, color: "#ff9f0a", pointSize: size });
 E.before("e746",
-  { ...E.v("sk9", "\\operatorname{polygon}\\left(\\left(1.62,-0.62\\right),\\left(u_x,u_y\\right)\\right)"), hidden: false, color: "#8b909c", lines: true, fill: false, lineWidth: "10", lineOpacity: flying },
-  knob("sk10", "\\left(u_x,u_y\\right)", "24"),
+  { ...E.v("sk9", "\\operatorname{polygon}\\left(\\left(1.62,-0.62\\right),\\left(k_x,k_y\\right)\\right)"), hidden: false, color: "#8b909c", lines: true, fill: false, lineWidth: "10", lineOpacity: flying },
+  knob("sk10", "\\left(k_x,k_y\\right)", "24"),
   knob("sk11", "\\left(-1.72,y_t\\right)", "22"),
 );
 save(out, s);
