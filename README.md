@@ -20,8 +20,11 @@ Plane Sim is a flight simulator that runs entirely inside the [Desmos](https://w
 | STICK: REAL / INVERTED | Flips the stick's up and down |
 | CENTER STICK | Levels everything out |
 | VIEW | Top left: switches between the cockpit and a 3rd-person camera behind the plane |
+| TIME | Top right: switches between day and night |
 
-![3rd-person view: the low-poly plane with red wingtips and tail banking toward the runway](docs/images/chase.jpg)
+| 3rd-person view | Night over the town |
+|---|---|
+| ![3rd-person view: the low-poly plane with red wingtips and tail banking toward the runway](docs/images/chase.jpg) | ![Night: the plane with its navigation lights flying over the lit town, runway lights to the left](docs/images/night.jpg) |
 
 **Take-off:** full throttle, wait until the speed reads about 60 knots, then pull the stick back.
 
@@ -36,6 +39,7 @@ Plane Sim is a flight simulator that runs entirely inside the [Desmos](https://w
 | Scenery | A town next to the airport, forests scattered on a 90 m grid and cloud clusters on a 1.1 km grid |
 | Sky | A 16-step gradient from horizon haze to deep blue, a sun with glare, and two ranges of distant mountains |
 | Cockpit | Airspeed, attitude, altimeter, heading and vertical speed gauges, a throttle lever, a stick and a heads-up readout |
+| Night | A dark sky with 240 stars and the moon, lit windows across the town, glowing runway edge, threshold and approach lights, red obstacle lights on the tower and hangars, and navigation lights and a flashing beacon on your plane |
 | Your plane | In 3rd-person view: a low-wing single-engine plane with a spinning propeller, fixed landing gear and a shadow on the ground |
 
 | Approach to runway 36 | Banking over the airport |
@@ -57,6 +61,8 @@ Plane Sim is a flight simulator that runs entirely inside the [Desmos](https://w
 **Draggable controls.** Desmos will not let you drag a point that has a condition attached, so the stick knob and the throttle handle are plain points that fade out through an opacity expression when you are not flying. A solid copy sits underneath each one so they keep the same look as the rest of the cockpit, and a shaft drawn from the center of the stick pad to the knob shows which way the stick is pushed. The point you drag is only a target: on every tick the ticker moves the real stick toward it at a fixed speed (a full deflection takes about 0.7 seconds), so a quick flick of the mouse turns into a smooth input instead of a sudden jerk. The stick and throttle sliders have hard limits at the edges of their tracks, so dragging past an edge pins the control there. Without those limits the ticker had to pull an out-of-range value back, and Desmos skips any tick that writes to a variable you are still dragging, so the whole sim stopped until you let go.
 
 **3rd-person view.** The VIEW button moves the camera from the cockpit to a point 17 m behind and above the plane. The camera follows the plane's heading and part of its pitch with a short lag, so you see the plane turn and pitch, but it never rolls, so the horizon stays level while the plane banks. The ticker works out a rotation matrix from the plane's body to the camera along with the plane's offset from the camera, and the 70 faces of the plane model are projected with it. Faces pointing away from the camera are skipped, the rest are sorted far to near, and each one is shaded from its angle to the sun. The shadow is the plane's outline projected along the sun direction onto the ground under the plane, and it fades out as you climb. The ground, sky and scenery were already drawn from a camera position and direction, so they only needed small changes to follow the new camera.
+
+**Night mode.** Every color in the scene passes through three channel multipliers that are 1 by day and about 0.2, 0.25 and 0.4 at night, so one switch darkens the sky, ground, haze, clouds, buildings and mountains together and tints them blue. The lights are separate lists of points that are empty by day, and they read their own copy of the camera that the ticker only updates at night, so by day Desmos never recomputes them and night mode costs nothing until it gets dark. The build script places about 1,000 window lights on the walls of the town's buildings, and only windows on walls facing the camera are drawn. Windows that fall inside the on-screen outline of a hangar and are farther away than it are hidden, so the town does not shine through the hangars.
 
 **Flight model.** Speed comes from thrust (weaker at altitude), drag and gravity along the pitch angle. The plane sinks below its stall speed, flaps lower that stall speed, and banking turns the plane at the rate a real coordinated turn would (9.81·tan(bank)/speed). On the ground the plane rolls on the runway; touching down checks the sink rate, bank, pitch, speed and whether you are over the runway, land or water.
 
@@ -85,6 +91,7 @@ tools/
                       smooth terrain lighting, haze, runway markings, per-cell scenery caching,
                       expression folding, merged cockpit shapes, rounded ticker values
   chase.mjs           adds the 3rd-person view: camera, plane model, shadow and VIEW button
+  night.mjs           adds night mode: darkened colors, stars, moon, lights and TIME button
   lib.mjs             helpers for editing graph states and folding single-use expressions
   check.mjs           loads graph states in Chrome and lists any expression errors
   bench.mjs           measures ticks per second for several graph states, interleaved

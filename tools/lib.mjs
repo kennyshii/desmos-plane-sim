@@ -22,6 +22,18 @@ export function editor(state) {
 }
 
 export const num = (x) => String(+x.toFixed(4));
+
+export function button(E, { after, id, x, y, half, click, labels }) {
+  const hexagon = (w, h, b) => [[-w, -h], [w, -h], [w + b, -h + b], [w + b, h - b], [w, h], [-w, h], [-w - b, h - b], [-w - b, -h + b]];
+  const pts = (w, h, b) => hexagon(w, h, b).map(([dx, dy]) => `(\\left\\{m_g=1:${num(x + dx)},9\\right\\},\\left\\{m_g=1:${num(y + dy)},9\\right\\})`).join(",");
+  const info = { enabled: true, latex: click };
+  const text = E.get("e681");
+  E.after(after,
+    { ...E.get("e690"), id: `${id}1`, latex: `\\operatorname{polygon}(${pts(half, 0.046, 0.03)})`, clickableInfo: info },
+    { ...E.get("e691"), id: `${id}2`, latex: `\\operatorname{polygon}(${pts(half - 0.008, 0.032, 0.024)})`, clickableInfo: info },
+    ...labels.map(([cond, label], k) => ({ ...text, id: `${id}${k + 3}`, latex: `(${x},${y})\\left\\{m_g=1\\right\\}\\left\\{${cond}\\right\\}`, label, clickableInfo: info })),
+  );
+}
 export const arr = (a) => `\\left[${a.map(num).join(",")}\\right]`;
 
 export function inline(state, name) {

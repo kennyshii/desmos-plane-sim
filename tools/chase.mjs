@@ -1,4 +1,4 @@
-import { num, arr } from "./lib.mjs";
+import { num, arr, button } from "./lib.mjs";
 
 const S = (a) => `\\sin\\left(${a}\\right)`;
 const C = (a) => `\\cos\\left(${a}\\right)`;
@@ -239,18 +239,11 @@ export function addChase(s, E) {
     E.p("cm32", `\\operatorname{polygon}\\left(${["a", "b", "c", "d"].map((k) => `\\left(${at("V_{sx}", k)},${at("V_{sy}", k)}\\right)`).join(",")}\\right)`, "#eceef2", { lines: true, lineWidth: "1", lineOpacity: "1", colorLatex: "\\operatorname{rgb}\\left(f_{R}\\left[f_{o}\\right]f_{s}\\left[f_{o}\\right],f_{G}\\left[f_{o}\\right]f_{s}\\left[f_{o}\\right],f_{B}\\left[f_{o}\\right]f_{s}\\left[f_{o}\\right]\\right)" }),
   ].map(inF));
 
-  const bx = -1.52, by = 0.828, hw = 0.22, hh = 0.046;
-  const hexagon = (w, hgt, b) => [[-w, -hgt], [w, -hgt], [w + b, -hgt + b], [w + b, hgt - b], [w, hgt], [-w, hgt], [-w - b, hgt - b], [-w - b, -hgt + b]];
-  const pts = (w, hgt, b) => hexagon(w, hgt, b).map(([x, y]) => `(\\left\\{m_g=1:${num(bx + x)},9\\right\\},\\left\\{m_g=1:${num(by + y)},9\\right\\})`).join(",");
-  const click = { enabled: true, latex: "v_m\\to1-v_m,a_{hc}\\to a_h,a_{pc}\\to0.6a_p-0.1,C_{ox}\\to0,C_{oy}\\to1.3,C_{oz}\\to0,N_{tz}\\to0" };
-  const flaps = E.get("e681");
-  const label = (id, mode, text) => ({ ...flaps, id, latex: `(${bx},${by})\\left\\{m_g=1\\right\\}\\left\\{v_m=${mode}\\right\\}`, label: text, clickableInfo: click });
-  E.after("e692",
-    { ...E.get("e690"), id: "cvb1", latex: `\\operatorname{polygon}(${pts(hw, hh, 0.03)})`, clickableInfo: click },
-    { ...E.get("e691"), id: "cvb2", latex: `\\operatorname{polygon}(${pts(hw - 0.008, hh - 0.014, 0.024)})`, clickableInfo: click },
-    label("cvb3", 0, "VIEW: COCKPIT"),
-    label("cvb4", 1, "VIEW: 3RD PERSON"),
-  );
+  button(E, {
+    after: "e692", id: "cvb", x: -1.52, y: 0.828, half: 0.22,
+    click: "v_m\\to1-v_m,a_{hc}\\to a_h,a_{pc}\\to0.6a_p-0.1,C_{ox}\\to0,C_{oy}\\to1.3,C_{oz}\\to0,N_{tz}\\to0",
+    labels: [["v_m=0", "VIEW: COCKPIT"], ["v_m=1", "VIEW: 3RD PERSON"]],
+  });
 
   for (const e of s.expressions.list) {
     const c = e.clickableInfo;
